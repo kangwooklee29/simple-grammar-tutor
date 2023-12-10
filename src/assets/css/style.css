@@ -1,0 +1,235 @@
+body, main, div, h1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body * {
+    color: #6c6c6c;
+}
+
+body {
+    justify-content: center;
+    align-items: center;
+    margin: 0px;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+main {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    position: relative;
+    justify-content: flex-start;
+}
+
+@media (min-width: 600px) {
+    main{
+        height: 85%;
+        width: 600px;
+    }
+}
+
+div.button{
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+}
+
+div.record_button {
+    margin-top: 50px;
+}
+
+div.record_button > button{
+    width: 200px;
+    height: 150px;
+    background-size : cover;
+    border: 0px;
+    user-select: none;
+    border-radius: 15px;
+    box-shadow: 0px 1px 6px #20212447;
+    background-color: #fff;
+}
+
+div.record_button > button.pushing {
+    box-shadow: 0px 1px 3px #20212447;
+    background-color: #eee;
+}
+
+div.API_KEY {
+    margin-top: 100px;
+}
+
+textarea {
+    width: 90%;
+    height: 150px;
+    font-size: 13pt;
+    box-sizing: border-box;
+    resize: none;
+    padding: 15px;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 15px;
+    margin-bottom: 10px;
+}
+
+textarea:focus {
+    outline: none;
+}
+
+.hide{
+    display:none;
+}
+
+div.title > button {
+    background-color: #fafafa;
+    border: 0px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+div.title {
+    height: 20px;
+    position: relative;
+    width: 100%;
+}
+
+div.api_status {
+    width: 250px;
+    height: 20px;
+}
+
+div.lang_select {
+    flex-direction: row;
+    width: 90%;
+}
+
+div.lang_select img {
+    width: 14px;
+    margin: 10px;
+}
+
+div.lang_select select {
+    width: 150px;
+    text-align: center;
+}
+
+div.model-selection-wrapper {
+    width: 90%;
+    justify-content: flex-start;
+}
+
+#default_model {
+    width: 80px;
+    margin-left: 20px;
+    margin-bottom: 5px;
+}
+
+div.answer_wrapper {
+    width: 90%;
+    background-color: #f5f5f5;
+    flex-direction: column;
+    border-radius: 15px;
+}
+
+div.answer {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 15px;
+    min-height: 100px;
+    line-height: 1.5;
+    display: inline;
+}
+
+div.answer > div {
+    width: fit-content;
+}
+
+div.result_buttons {
+    position: relative;
+    width: 100%;
+    height: 60px;
+}
+
+div.result_buttons button {
+    background-color: #f5f5f5;
+    box-shadow: 0 1px 6px #20212447;
+    border: 0px;
+    border-radius: 5px;
+    padding: 5px 8px;
+}
+
+div.result_buttons button:disabled {
+    background-color: #ddd;
+    box-shadow: 0 1px 3px #20212447;
+}
+
+h1 {
+    height: 100px;
+    padding: 5px;
+}
+
+#options {
+    border: 1px solid black;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 1000;
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: flex-start;
+    display: none;
+}
+
+#options label {
+    width: 30%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    padding: 5px;
+}
+
+#options item {
+    width: 70%;
+    display: flex;
+}
+
+#options item > div:first-child {
+    width: 80%;
+}
+
+#options input{
+    width: 80%;
+}
+
+#options button{
+    margin: 5px;
+    width: 50px;
+}
+
+#options .options-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+div.regenerate-buttons {
+    justify-content: flex-end;
+    position: absolute;
+    right: 20px;
+    display: none;
+}
+
+div.regenerate-buttons * {
+    margin: 5px;
+}
+
+#regenerate_result {
+    font-size: 13pt;
+    align-items: flex-start;
+}

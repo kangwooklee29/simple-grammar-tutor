@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Simple Grammar Tutor</title>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1">
+    <link rel="stylesheet" href="../assets/css/style.css">   
+  </head>
+  <body>
+    <main>
+      <div class="title"><button>options</button></div>
+      <div class="lang_select">
+        <select id="source_language">
+          <option value="auto" data-i18n="auto">Auto</option>
+        </select>
+      </div>
+      <div class="api_status"></div>
+      <textarea class="record_script"></textarea>
+      <div class="model-selection-wrapper">
+        <select id="default_model">
+          <option value="gpt-3.5-turbo-1106" selected>GPT-3.5</option>
+          <option value="gpt-4-1106-preview">GPT-4</option>
+        </select>  
+      </div>
+      <div class="answer_wrapper">
+        <div class="answer">
+            <div id="score"></div>
+            <div id="regenerate_result"></div>
+            <div id="description"></div>
+        </div>
+        <div class="result_buttons">
+          <div class="regenerate-buttons">
+            <button id="gpt4" data-i18n="regenerate">Regenerate</button>
+          </div>
+        </div>
+      </div>
+      <div id="options">
+        <h1>Simple Gramar Tutor Options</h1>
+        <div class="API_KEY">
+          <label for="api_key" data-i18n="api_key">OpenAI API key</label>
+          <item>
+              <div><input type="text" id="api_key"></div>
+              <div><button data-i18n="save">SAVE</button></div>
+          </item>
+        </div>
+        <div class="options-close">x</div>
+      </div>
+      <div class="record_button">
+        <button data-i18n="keep_pushing">Keep pushing to record</button>
+      </div>
+    </main>
+  <script src="../scripts/main.js" type="module"></script>
+  </body>
+</html>
