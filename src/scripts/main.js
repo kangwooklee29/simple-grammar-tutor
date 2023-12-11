@@ -5,8 +5,15 @@ let recordTimer = null, timerTime = 0;
 let start_recording_indicator = false;
 let typingTimer = null;
 
+const urlParams = new URLSearchParams(new URL(window.location.href).search);
+const translate_text = urlParams.get('translate');
+const lang = urlParams.get('lang');
+
 async function start_recording() {
     if (mediaRecorder && mediaRecorder.state === "recording") return;
+    document.querySelector("#score").innerHTML = '';
+    document.querySelector("#regenerate_result").innerHTML = '';
+    document.querySelector("#description").innerHTML = '';
     document.querySelector("div.record_button button").classList.add("pushing");
 
     start_recording_indicator = new Date().getTime();
@@ -34,8 +41,8 @@ async function start_recording() {
         document.querySelector("#score").innerHTML = '';
         var result = await whisper_api(file);
         if (result.text) {
-            document.querySelector("textarea.record_script").value = result.text;
-            messages.send_chatgpt(result.text, document.querySelector("#default_model").value);
+            document.querySelector("div.record_script").innerHTML = result.text;
+            messages.send_chatgpt(result.text);
         }
         else
             document.querySelector("div.api_status").innerHTML = `${textContents[user_lang]["no_message"]}`;
@@ -77,16 +84,11 @@ document.body.addEventListener("mouseup", () => {
     }, 200);
 });
 
-document.querySelector("textarea.record_script").addEventListener("input", e => {
+document.querySelector("div.record_script").addEventListener("input", e => {
     clearTimeout(typingTimer);
     typingTimer = setTimeout( () => {
-        messages.send_chatgpt(e.target.value, document.querySelector("#default_model").value);
+        messages.send_chatgpt(e.target.innerText);
     }, 3000);
-});
-
-document.querySelector("div.result_buttons").addEventListener("click", e => {
-    if (e.target.id === "gpt4")
-        messages.send_chatgpt(document.querySelector("textarea.record_script").value, "gpt-4-1106-preview");
 });
 
 document.querySelector("div.title button").addEventListener("click", () => {
@@ -130,4 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('[data-i18n]').forEach(element => {
         element.textContent = textContents[user_lang][element.getAttribute('data-i18n')];
     });
+
+    if (lang)
+        document.querySelector("#source_language").value = lang;
+    if (translate_text) {
+        document.querySelector("div.record_script").innerHTML = translate_text;
+        messages.send_chatgpt(translate_text, true);
+    }
 });

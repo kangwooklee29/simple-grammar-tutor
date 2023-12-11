@@ -94,9 +94,7 @@ async function whisper_api(file) {
     return await whisper_api(file);
 }
 
-async function chatgpt_api(messages, model, is_verifying) {
-    document.querySelector("div.regenerate-buttons").style.display = ``;
-
+async function chatgpt_api(messages, model) {
     const api_url = "https://api.openai.com/v1/chat/completions";
     const param = {
         method: "POST",
@@ -110,7 +108,7 @@ async function chatgpt_api(messages, model, is_verifying) {
 
     var timer = setTimeout(() => {
         document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
-        chatgpt_api(messages, model, is_verifying);
+        chatgpt_api(messages, model);
     }, 8000);
     const response = await fetch(api_url, param).then(async response => {
         const reader = response.body.getReader();
@@ -125,7 +123,6 @@ async function chatgpt_api(messages, model, is_verifying) {
             if (messages.length === 0) {
                 answer_stream.end();
                 console.log(answer_stream.now_answer);
-                document.querySelector("div.regenerate-buttons").style.display = `flex`;
                 return answer_stream.now_answer;
             }
 
@@ -136,7 +133,7 @@ async function chatgpt_api(messages, model, is_verifying) {
                     answer_stream.start();
                     const val = JSON.parse(message.replace("data: ", ""));
                     if (val.choices[0].delta.content)
-                        await answer_stream.add_answer(val.choices[0].delta.content, is_verifying);
+                        await answer_stream.add_answer(val.choices[0].delta.content);
                 }
 
             return await reader.read().then(processResult);
