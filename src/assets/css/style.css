@@ -1,3 +1,9 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+* {
+    font-family: Pretendard;
+}
+
 body, main, div, h1 {
     display: flex;
     justify-content: center;
@@ -5,7 +11,7 @@ body, main, div, h1 {
 }
 
 body * {
-    color: #6c6c6c;
+    color: #444;
 }
 
 body {
@@ -20,42 +26,66 @@ body {
 main {
     width: 100%;
     min-height: 100vh;
+    margin-bottom: 200px;
     flex-direction: column;
     position: relative;
     justify-content: flex-start;
 }
 
-@media (min-width: 600px) {
-    main{
-        height: 85%;
-        width: 600px;
-    }
-}
-
-div.button{
-    align-items: center;
-    justify-content: center;
-    height: 300px;
-}
-
 div.record_button {
-    margin-top: 50px;
+    position: fixed;
+    height: 150px;
+    width: 100%;
+    bottom: 0px;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
-div.record_button > button{
-    width: 200px;
-    height: 150px;
-    background-size : cover;
+div.record_button > button {
+    width: 100px;
+    height: 100px;
+    background-size : 50%;
+    background-image: url('../img/mic-unpushed.svg');
+    background-repeat: no-repeat;
+    background-position: center center;    
     border: 0px;
     user-select: none;
-    border-radius: 15px;
+    border-radius: 50%;
     box-shadow: 0px 1px 6px #20212447;
-    background-color: #fff;
+    background-color: #fcfcfc;
 }
 
 div.record_button > button.pushing {
+    width: 120px;
+    height: 120px;
+    background-image: url('../img/mic-pushed.svg');
     box-shadow: 0px 1px 3px #20212447;
     background-color: #eee;
+}
+
+@media (min-width: 600px) {
+    main{
+        width: 600px;
+    }
+
+    div.record_button {
+        position: absolute;
+        top: 180px;
+        left: 35px;
+        height: 40px;
+        width: 40px;
+        background-color: transparent;
+    }
+
+    div.record_button > button {
+        width: 30px;
+        height: 30px;
+        box-shadow: 0px 1px 3px #20212447;
+    }
+
+    div.record_button > button.pushing {
+        width: 40px;
+        height: 40px;
+    }    
 }
 
 div.API_KEY {
@@ -98,18 +128,8 @@ div.title {
 }
 
 div.api_status {
-    width: 250px;
-    height: 20px;
-}
-
-div.lang_select {
-    flex-direction: row;
     width: 90%;
-}
-
-div.lang_select img {
-    width: 14px;
-    margin: 10px;
+    height: 40px;
 }
 
 div.lang_select select {
@@ -141,11 +161,10 @@ div.answer {
     height: 100%;
     box-sizing: border-box;
     justify-content: flex-start;
-    align-items: flex-start;
     padding: 15px;
-    min-height: 100px;
+    min-height: 150px;
     line-height: 1.5;
-    display: inline;
+    flex-direction: column;
 }
 
 div.answer > div {
@@ -199,6 +218,7 @@ h1 {
 #options item {
     width: 70%;
     display: flex;
+    justify-content: center;
 }
 
 #options item > div:first-child {
@@ -234,4 +254,51 @@ div.regenerate-buttons * {
 #regenerate_result {
     font-size: 13pt;
     align-items: flex-start;
+    background-color: #fefefe;
+    width: 90%;
+    padding: 15px;
+    box-sizing: border-box;
+    border-radius: 15px;
+    margin: 15px;
+    display: none;
+}
+
+ins {
+    text-decoration: none;
+}
+
+div.record_upper_buttons {
+    width: 90%;
+    justify-content: flex-end;
+    padding-right: 15px;
+    position: relative;
+    height: 17px;
+}
+
+div.record_upper_buttons > button {
+    border: 1px solid #ccc;
+    border-bottom: 0px;
+    border-radius: 5px 5px 0px 0px;
+    position: absolute;
+    right: 20px;
+    color: #666;
+}
+
+div.record_upper_buttons > button.pushing {
+    background-color: #fff;
+    color: #444;
+}
+
+#score > img {
+    height: 13px;
+    margin: 7px;    
+}
+
+#suggestion {
+    margin-top: 20px;
+    font-size: 10pt;
+}
+
+b {
+    font-weight: 600;
 }

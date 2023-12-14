@@ -1,11 +1,10 @@
-import {whisper_api, messages, language_dict, textContents, user_lang} from './common.js';
+import {whisper_api, messages, language_dict, textContents, user_lang, urlParams} from './common.js';
 
 let mediaRecorder = null, chunks = [];
 let recordTimer = null, timerTime = 0;
 let start_recording_indicator = false;
 let typingTimer = null;
 
-const urlParams = new URLSearchParams(new URL(window.location.href).search);
 const translate_text = urlParams.get('translate');
 const lang = urlParams.get('lang');
 
@@ -13,7 +12,10 @@ async function start_recording() {
     if (mediaRecorder && mediaRecorder.state === "recording") return;
     document.querySelector("#score").innerHTML = '';
     document.querySelector("#regenerate_result").innerHTML = '';
+    document.querySelector("#regenerate_result").style.display = '';
+    document.querySelector("#translate_result").innerHTML = '';
     document.querySelector("#description").innerHTML = '';
+    document.querySelector("#suggestion").innerHTML = '';
     document.querySelector("div.record_button button").classList.add("pushing");
 
     start_recording_indicator = new Date().getTime();
@@ -37,7 +39,10 @@ async function start_recording() {
         clearInterval(recordTimer);
         document.querySelector("div.api_status").innerHTML = `${textContents[user_lang]["waiting"]}...`;
         document.querySelector("#regenerate_result").innerHTML = '';
+        document.querySelector("#regenerate_result").style.display = '';
+        document.querySelector("#translate_result").innerHTML = '';
         document.querySelector("#description").innerHTML = '';
+        document.querySelector("#suggestion").innerHTML = '';
         document.querySelector("#score").innerHTML = '';
         var result = await whisper_api(file);
         if (result.text) {
@@ -69,7 +74,10 @@ document.body.addEventListener("touchend", () => {
     }, 200);
 });
 
-document.querySelector("div.record_button > button").addEventListener("mousedown", () => start_recording());
+document.querySelector("div.record_button > button").addEventListener("mousedown", e => {
+    if (e.button === 0)
+        start_recording();
+});
 
 document.body.addEventListener("mouseup", () => {
     let registerRecordingStopper = setInterval(() => {
@@ -84,11 +92,25 @@ document.body.addEventListener("mouseup", () => {
     }, 200);
 });
 
+document.querySelector("div.record_script").addEventListener("focus", e => {
+    e.target.innerHTML = e.target.innerText;
+});
+
 document.querySelector("div.record_script").addEventListener("input", e => {
     clearTimeout(typingTimer);
     typingTimer = setTimeout( () => {
         messages.send_chatgpt(e.target.innerText);
     }, 3000);
+});
+
+document.querySelector("div.record_upper_buttons > button").addEventListener("click", e => {
+    e.target.classList.toggle("pushing");
+    var is_translate_mode = localStorage.getItem("is_translate_mode");
+    is_translate_mode = !is_translate_mode || !JSON.parse(is_translate_mode)
+    localStorage.setItem("is_translate_mode", is_translate_mode);
+    document.querySelector("div.answer_wrapper").style.display = is_translate_mode ? 'none' : '';
+    if (is_translate_mode)
+        document.querySelector("div.record_script").innerHTML = '';
 });
 
 document.querySelector("div.title button").addEventListener("click", () => {
@@ -121,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const source_language = localStorage.getItem("source_language_grammar");
 
-    document.querySelector("#source_language").value = source_language ? source_language : "auto";
+    document.querySelector("#source_language").value = source_language ? source_language : "en";
 
     const API_KEY = localStorage.getItem("API_KEY");
     if (API_KEY)
@@ -133,10 +155,16 @@ document.addEventListener("DOMContentLoaded", () => {
         element.textContent = textContents[user_lang][element.getAttribute('data-i18n')];
     });
 
+    var is_translate_mode = localStorage.getItem("is_translate_mode");
+    if (is_translate_mode && JSON.parse(is_translate_mode))
+        localStorage.setItem("is_translate_mode", "false");
+
     if (lang)
         document.querySelector("#source_language").value = lang;
     if (translate_text) {
         document.querySelector("div.record_script").innerHTML = translate_text;
-        messages.send_chatgpt(translate_text, true);
+        localStorage.setItem("is_translate_mode", "false");
+        document.querySelector("div.record_upper_buttons > button").click();
+        messages.send_chatgpt(translate_text);
     }
 });

@@ -1,16 +1,17 @@
 import {Messages} from "./messages.js";
 import {AnswerStream} from "./answer_stream.js";
 
-export {whisper_api, chatgpt_api, answer_stream, messages, language_dict, textContents, user_lang};
+export {whisper_api, chatgpt_api, answer_stream, messages, language_dict, textContents, user_lang, urlParams};
 
 var answer_stream = new AnswerStream();
 var messages = new Messages();
 
 const user_lang = navigator.language || navigator.userLanguage;
+const urlParams = new URLSearchParams(new URL(window.location.href).search);
 
 const textContents = {
-    "en": {"auto": "Auto", "save": "Save", "regenerate": "Regenerate", "api_key": "OpenAI API key", "keep_pushing": "Keep pushing to record", "generating": "Generating", "recording": "Recording", "waiting": "Waiting for response", "timeout": "Timeout! Retrying...", "no_message": "No messages. Check mic setup."},
-    "ko": {"auto": "자동", "save": "저장", "regenerate": "결과 재생성", "api_key": "OpenAI API 키", "keep_pushing": "눌러서 녹음하기", "generating": "결과 생성 중", "recording": "녹음 중", "waiting": "응답 대기 중", "timeout": "응답이 없습니다. 재시도 중입니다...", "no_message": "녹음되지 않았습니다. 마이크를 확인하세요."},
+    "en": {"auto": "Auto", "save": "Save", "regenerate": "Regenerate", "api_key": "OpenAI API key", "generating": "Generating", "recording": "Recording", "waiting": "Waiting for response", "timeout": "Timeout! Retrying...", "no_message": "No messages. Check mic setup.", "language_to_learn": "Language to learn", "get_example_translation": "Get Example Translation", "another_suggested_expression": "Another Suggestion"},
+    "ko": {"auto": "자동", "save": "저장", "regenerate": "결과 재생성", "api_key": "OpenAI API 키", "generating": "결과 생성 중", "recording": "녹음 중", "waiting": "응답 대기 중", "timeout": "응답이 없습니다. 재시도 중입니다...", "no_message": "녹음되지 않았습니다. 마이크를 확인하세요.", "language_to_learn": "학습할 언어", "get_example_translation": "예제 번역 생성하기", "another_suggested_expression": "추가 제안"},
 };
 
 const language_dict = {
@@ -77,7 +78,9 @@ async function whisper_api(file) {
     var formData = new FormData();
     formData.append('model', 'whisper-1');
     formData.append('file', file);
-    if (document.querySelector("#source_language").value !== "auto")
+    var is_translate_mode = localStorage.getItem("is_translate_mode");
+    is_translate_mode = is_translate_mode && JSON.parse(is_translate_mode);
+    if (document.querySelector("#source_language").value !== "auto" && !is_translate_mode)
         formData.append('language', document.querySelector("#source_language").value);
 
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {

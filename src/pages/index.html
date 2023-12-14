@@ -9,22 +9,20 @@
   <body>
     <main>
       <div class="title"><button>options</button></div>
-      <div class="lang_select">
-        <select id="source_language">
-          <option value="auto" data-i18n="auto">Auto</option>
-        </select>
-      </div>
       <div class="api_status"></div>
+      <div class="record_upper_buttons"><button data-i18n="get_example_translation">Get Example Translation</button></div>
       <div class="record_script" contenteditable="true"></div>
       <div class="answer_wrapper">
         <div class="answer">
             <div id="score"></div>
             <div id="regenerate_result"></div>
+            <div id="translate_result"></div>
             <div id="description"></div>
+            <div id="suggestion"></div>
         </div>
       </div>
       <div id="options">
-        <h1>Simple Gramar Tutor Options</h1>
+        <h1>Simple Grammar Tutor Options</h1>
         <div class="API_KEY">
           <label for="api_key" data-i18n="api_key">OpenAI API key</label>
           <item>
@@ -32,10 +30,18 @@
               <div><button data-i18n="save">SAVE</button></div>
           </item>
         </div>
+        <div class="lang_select">
+          <label for="source_language" data-i18n="language_to_learn">Language to learn</label>
+          <item>
+            <select id="source_language">
+              <option value="auto" data-i18n="auto">Auto</option>
+            </select>
+          </item>
+        </div>
         <div class="options-close">x</div>
       </div>
       <div class="record_button">
-        <button data-i18n="keep_pushing">Keep pushing to record</button>
+        <button></button>
       </div>
     </main>
   <script src="../scripts/main.js" type="module"></script>
