@@ -93,6 +93,9 @@ document.body.addEventListener("mouseup", () => {
 });
 
 document.querySelector("div.record_script").addEventListener("focus", e => {
+    e.target.querySelectorAll("ins").forEach(elem => {
+        elem.innerHTML = "";
+    })
     e.target.innerHTML = e.target.innerText;
 });
 
@@ -101,6 +104,12 @@ document.querySelector("div.record_script").addEventListener("input", e => {
     typingTimer = setTimeout( () => {
         messages.send_chatgpt(e.target.innerText);
     }, 3000);
+});
+
+document.querySelector("div.record_script").addEventListener('paste', e => {
+    e.preventDefault();
+    var text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
 });
 
 document.querySelector("div.record_upper_buttons > button").addEventListener("click", e => {
@@ -122,7 +131,7 @@ document.querySelector("#options").addEventListener("click", e => {
         localStorage.setItem("API_KEY", document.querySelector("#api_key").value);
 
     if (e.target.classList.contains("options-close")) {
-        if (localStorage.getItem("API_KEY"))
+        if (localStorage.getItem("API_KEY") || !window.location.href.includes("github"))
             document.querySelector("#options").style.display = 'none';
     }
 });
@@ -148,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_KEY = localStorage.getItem("API_KEY");
     if (API_KEY)
         document.querySelector("div.API_KEY input").value = API_KEY;
-    else
+    else if (window.location.href.includes("github"))
         document.querySelector("#options").style.display = 'block';
 
     document.querySelectorAll('[data-i18n]').forEach(element => {

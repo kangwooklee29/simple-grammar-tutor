@@ -10,8 +10,8 @@ const user_lang = navigator.language || navigator.userLanguage;
 const urlParams = new URLSearchParams(new URL(window.location.href).search);
 
 const textContents = {
-    "en": {"auto": "Auto", "save": "Save", "regenerate": "Regenerate", "api_key": "OpenAI API key", "generating": "Generating", "recording": "Recording", "waiting": "Waiting for response", "timeout": "Timeout! Retrying...", "no_message": "No messages. Check mic setup.", "language_to_learn": "Language to learn", "get_example_translation": "Get Example Translation", "another_suggested_expression": "Another Suggestion"},
-    "ko": {"auto": "자동", "save": "저장", "regenerate": "결과 재생성", "api_key": "OpenAI API 키", "generating": "결과 생성 중", "recording": "녹음 중", "waiting": "응답 대기 중", "timeout": "응답이 없습니다. 재시도 중입니다...", "no_message": "녹음되지 않았습니다. 마이크를 확인하세요.", "language_to_learn": "학습할 언어", "get_example_translation": "예제 번역 생성하기", "another_suggested_expression": "추가 제안"},
+    "en": {"auto": "Auto", "save": "Save", "regenerate": "Regenerate", "api_key": "OpenAI API key", "generating": "Generating", "recording": "Recording", "waiting": "Waiting for response", "timeout": "Timeout! Retrying...", "no_message": "No messages. Check mic setup.", "language_to_learn": "Language to learn", "get_example_translation": "Get Example Translation", "another_suggested_expression": "Another Suggestion", "logout": "Logout", "click": "Click"},
+    "ko": {"auto": "자동", "save": "저장", "regenerate": "결과 재생성", "api_key": "OpenAI API 키", "generating": "결과 생성 중", "recording": "녹음 중", "waiting": "응답 대기 중", "timeout": "응답이 없습니다. 재시도 중입니다...", "no_message": "녹음되지 않았습니다. 마이크를 확인하세요.", "language_to_learn": "학습할 언어", "get_example_translation": "예제 번역 생성하기", "another_suggested_expression": "추가 제안", "logout": "로그아웃", "click": "클릭"},
 };
 
 const language_dict = {
@@ -75,6 +75,12 @@ const language_dict = {
 };
 
 async function whisper_api(file) {
+    let api_url = "https://api.openai.com/v1/audio/transcriptions";
+    let api_key = localStorage.getItem("API_KEY");
+
+    if (!api_key)
+        api_url = "/api/audio";
+
     var formData = new FormData();
     formData.append('model', 'whisper-1');
     formData.append('file', file);
@@ -83,66 +89,99 @@ async function whisper_api(file) {
     if (document.querySelector("#source_language").value !== "auto" && !is_translate_mode)
         formData.append('language', document.querySelector("#source_language").value);
 
-    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${localStorage.getItem("API_KEY")}`
-        },
-        body: formData
-    });
-    if (response.ok)
-        return await response.json();
+    try {
+        const response = await fetch(api_url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${api_key}`
+            },
+            body: formData
+        });
+        if (response.ok)
+            return await response.json();
+        else
+            throw new Error(response.status);
+    } catch (error) {
+        document.querySelector("div.api_status").innerHTML = error.message;
+    }
     document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
     await new Promise(resolve => setTimeout(resolve, 8000));
     return await whisper_api(file);
 }
 
 async function chatgpt_api(messages, model) {
-    const api_url = "https://api.openai.com/v1/chat/completions";
+    let api_url = "https://api.openai.com/v1/chat/completions";
+    let api_key = localStorage.getItem("API_KEY");
+    let processed_messages = messages;
+
+    if (!api_key) {
+        api_url = "/api/chat";
+
+        console.log(messages);
+        var first_ext = messages[1].content.match(/^Text: "(.*?)" \/\//);
+        if (first_ext) {
+            if (messages[1].content.includes("Translate"))
+            processed_messages = [first_ext[1], language_dict[document.querySelector("#source_language").value].English];
+            else
+            processed_messages = [first_ext[1]];
+        }
+        else {
+            var second_ext = messages[1].content.match(/^{(.*?)} \/\//);
+            processed_messages = JSON.parse(`{${second_ext[1]}}`);
+        }
+    }
+
     const param = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("API_KEY")}`,
+            "Authorization": `Bearer ${api_key}`,
             "type": "json_object"
         },
-        body: JSON.stringify({model: model, messages: messages, stream: true})
+        body: JSON.stringify({model: model, messages: processed_messages, stream: true})
     };
 
     var timer = setTimeout(() => {
         document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
         chatgpt_api(messages, model);
     }, 8000);
-    const response = await fetch(api_url, param).then(async response => {
-        const reader = response.body.getReader();
-        let buffer = '';
 
-        return await reader.read().then(async function processResult(result) {
-            if (answer_stream.signal) return "";
-            buffer += new TextDecoder('utf-8').decode(result.value || new Uint8Array());
+    try {
+        const response = await fetch(api_url, param).then(async response => {
+            const reader = response.body.getReader();
+            let buffer = '';
 
-            var messages = buffer.split('\n\n')
-            buffer = messages.pop();
-            if (messages.length === 0) {
-                answer_stream.end();
-                console.log(answer_stream.now_answer);
-                return answer_stream.now_answer;
-            }
+            return await reader.read().then(async function processResult(result) {
+                if (answer_stream.signal) return "";
+                buffer += new TextDecoder('utf-8').decode(result.value || new Uint8Array());
 
-            for (var message of messages)
-                if (message.includes("data: ") && message.includes("[DONE]") === false) {
-                    if (answer_stream.now_streaming === false)
-                        clearTimeout(timer);
-                    answer_stream.start();
-                    const val = JSON.parse(message.replace("data: ", ""));
-                    if (val.choices[0].delta.content)
-                        await answer_stream.add_answer(val.choices[0].delta.content);
+                var messages = buffer.split('\n\n')
+                buffer = messages.pop();
+                if (messages.length === 0) {
+                    answer_stream.end();
+                    console.log(answer_stream.now_answer);
+                    return response;
                 }
 
-            return await reader.read().then(processResult);
-        });
-    });
-    if (response.ok) {
-        clearTimeout(timer);
+                for (var message of messages)
+                    if (message.includes("data: ") && message.includes("[DONE]") === false) {
+                        if (answer_stream.now_streaming === false)
+                            clearTimeout(timer);
+                        answer_stream.start();
+                        const val = JSON.parse(message.replace("data: ", ""));
+                        if (val.choices[0].delta.content)
+                            await answer_stream.add_answer(val.choices[0].delta.content);
+                    }
+
+                return await reader.read().then(processResult);
+            });
+        })
+        console.log(response);
+        if (response.ok)
+            clearTimeout(timer);
+        else
+            throw new Error(response.status);
+    } catch(error) {
+        document.querySelector("div.api_status").innerHTML = error.message;
     }
 }
