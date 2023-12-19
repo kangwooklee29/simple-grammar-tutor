@@ -8,12 +8,10 @@ export class AnswerStream {
     }
 
     start() {
-        if (this.now_streaming === false) {
-            this.now_answer = "";
-            this.result = "";
-            this.now_streaming = true;
-            document.querySelector("div.api_status").innerHTML = `${textContents[user_lang]["generating"]}...`;
-        }
+        this.now_answer = "";
+        this.result = "";
+        this.now_streaming = true;
+        document.querySelector("div.api_status").innerHTML = `${textContents[user_lang]["generating"]}...`;
     }
 
     findPropertyValue(jsonString, propertyName, is_num=false) {

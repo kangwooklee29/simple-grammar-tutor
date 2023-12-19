@@ -102,6 +102,7 @@ document.querySelector("div.record_script").addEventListener("focus", e => {
 document.querySelector("div.record_script").addEventListener("input", e => {
     clearTimeout(typingTimer);
     typingTimer = setTimeout( () => {
+        e.target.blur();
         messages.send_chatgpt(e.target.innerText);
     }, 3000);
 });

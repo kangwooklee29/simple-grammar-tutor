@@ -6,7 +6,8 @@ export {whisper_api, chatgpt_api, answer_stream, messages, language_dict, textCo
 var answer_stream = new AnswerStream();
 var messages = new Messages();
 
-const user_lang = navigator.language || navigator.userLanguage;
+let user_lang = navigator.language || navigator.userLanguage;
+user_lang = user_lang.split('-')[0];
 const urlParams = new URLSearchParams(new URL(window.location.href).search);
 
 const textContents = {
@@ -89,24 +90,33 @@ async function whisper_api(file) {
     if (document.querySelector("#source_language").value !== "auto" && !is_translate_mode)
         formData.append('language', document.querySelector("#source_language").value);
 
-    try {
-        const response = await fetch(api_url, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${api_key}`
-            },
-            body: formData
-        });
-        if (response.ok)
-            return await response.json();
-        else
+    const abortController = new AbortController();
+    const param = {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${api_key}`
+        },
+        body: formData,
+        signal: abortController.signal
+    };
+    for (let i = 0; i < 5; i++) {
+        try {
+            const response = await fetch(api_url, param);
+            if (response.ok)
+                return await response.json();
             throw new Error(response.status);
-    } catch (error) {
-        document.querySelector("div.api_status").innerHTML = error.message;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
+                timer = setTimeout(() => abortController.abort(), 8000);
+            } else {
+                document.querySelector("div.api_status").innerHTML = error.message;
+                return {};
+            }
+        }
     }
-    document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
-    await new Promise(resolve => setTimeout(resolve, 8000));
-    return await whisper_api(file);
+    document.querySelector("div.api_status").innerHTML = error.message;
+    return {};
 }
 
 async function chatgpt_api(messages, model) {
@@ -131,6 +141,7 @@ async function chatgpt_api(messages, model) {
         }
     }
 
+    const abortController = new AbortController();
     const param = {
         method: "POST",
         headers: {
@@ -138,50 +149,58 @@ async function chatgpt_api(messages, model) {
             "Authorization": `Bearer ${api_key}`,
             "type": "json_object"
         },
-        body: JSON.stringify({model: model, messages: processed_messages, stream: true})
+        body: JSON.stringify({model: model, messages: processed_messages, stream: true}),
+        signal: abortController.signal
     };
-
-    var timer = setTimeout(() => {
-        document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
-        chatgpt_api(messages, model);
-    }, 8000);
-
-    try {
-        const response = await fetch(api_url, param).then(async response => {
-            const reader = response.body.getReader();
-            let buffer = '';
-
-            return await reader.read().then(async function processResult(result) {
-                if (answer_stream.signal) return "";
-                buffer += new TextDecoder('utf-8').decode(result.value || new Uint8Array());
-
-                var messages = buffer.split('\n\n')
-                buffer = messages.pop();
-                if (messages.length === 0) {
-                    answer_stream.end();
-                    console.log(answer_stream.now_answer);
-                    return response;
-                }
-
-                for (var message of messages)
-                    if (message.includes("data: ") && message.includes("[DONE]") === false) {
-                        if (answer_stream.now_streaming === false)
-                            clearTimeout(timer);
-                        answer_stream.start();
-                        const val = JSON.parse(message.replace("data: ", ""));
-                        if (val.choices[0].delta.content)
-                            await answer_stream.add_answer(val.choices[0].delta.content);
-                    }
-
-                return await reader.read().then(processResult);
-            });
-        })
-        console.log(response);
-        if (response.ok)
+    let response;
+    let timer = setTimeout(() => abortController.abort(), 8000);
+    for (let i = 0; i < 5; i++) {
+        try {
+            response = await fetch(api_url, param);
+            console.log(response);
             clearTimeout(timer);
-        else
+            if (response.ok)
+                break;
             throw new Error(response.status);
-    } catch(error) {
-        document.querySelector("div.api_status").innerHTML = error.message;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                document.querySelector("div.api_status").innerHTML = textContents[user_lang]["timeout"];
+                timer = setTimeout(() => abortController.abort(), 8000);
+            } else {
+                document.querySelector("div.api_status").innerHTML = error.message;
+                return;
+            }
+        }
     }
+    if (!response.ok) {
+        document.querySelector("div.api_status").innerHTML = error.message;
+        return;
+    }
+
+    const reader = response.body.getReader();
+    let buffer = '';
+    await reader.read().then(async function processResult(result) {
+        buffer += new TextDecoder('utf-8').decode(result.value || new Uint8Array());
+
+        var messages = buffer.split('\n\n');
+        buffer = messages.pop();
+        if (messages.length === 0) {
+            answer_stream.end();
+            console.log(answer_stream.now_answer);
+            return;
+        }
+
+        for (var message of messages)
+            if (message.includes("data: ") && message.includes("[DONE]") === false) {
+                if (answer_stream.now_streaming === false) {
+                    clearTimeout(timer);
+                    answer_stream.start();
+                }
+                const val = JSON.parse(message.replace("data: ", ""));
+                if (val.choices[0].delta.content)
+                    await answer_stream.add_answer(val.choices[0].delta.content);
+            }
+
+        await reader.read().then(processResult);
+    });
 }
